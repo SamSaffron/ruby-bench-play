@@ -1,17 +1,37 @@
 RUBY_DIR="/home/sam/Source/ruby"
+DISCOURSE_DIR = "/home/sam/Source/discourse"
+INSTALL_DIR = "/home/sam/.rbenv/versions/ruby-head"
+
 require 'yaml'
 
-COMMITS = 30
+def rebuild
+  puts "REBUILDING FROM SCRATCH"
+  `rm -fr #{INSTALL_DIR}`
+  puts `cd #{RUBY_DIR} && make clean`
+  puts `cd #{RUBY_DIR} && make install`
+  puts `gem install bundler`
+  puts `cd #{DISCOURSE_DIR} && bundle`
+end
+
+COMMITS = 10
 results = []
 
 COMMITS.times do |i|
-  puts `cd #{RUBY_DIR} && git checkout HEAD~#{i*10}`
+  puts `cd #{RUBY_DIR} && git checkout HEAD~#{i*40}`
   puts `cd #{RUBY_DIR} && make install`
 
-  results << YAML.load(`ruby plot_mem.rb`) rescue nil
+
+  result = `ruby plot_mem.rb` rescue nil
+  if $?.success?
+    results << YAML.load(result)
+  else
+    rebuild
+    result = `ruby plot_mem.rb` rescue nil
+    if $?.success?
+      results << YAML.load(result)
+    end
+  end
 end
-
-
 
 require 'csv'
 
