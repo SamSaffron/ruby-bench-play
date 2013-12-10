@@ -3,6 +3,7 @@ require 'csv'
 RUBY_DIR="/home/sam/Source/ruby"
 DISCOURSE_DIR = "/home/sam/Source/discourse"
 INSTALL_DIR = "/home/sam/.rbenv/versions/ruby-head"
+CURRENT_DIR = `pwd`.strip
 
 # restore env, so rbenv works right
 old_env = ENV['ORIGINAL_ENV'].dup
@@ -44,6 +45,7 @@ end
 
 
 def run_ruby(cmd)
+  p "running: #{cmd}"
   result = ""
   ENV["RBENV_VERSION"] = "ruby-head"
   IO.popen("#{cmd}") do |line|
@@ -61,7 +63,7 @@ def flatten_hash(hash,prefix="",result=nil)
     if Hash === v
       flatten_hash(v, "#{prefix}#{k}_", result)
     else
-      result[k] = v
+      result["#{prefix}#{k}"] = v
     end
   end
 
@@ -100,10 +102,11 @@ COMMITS.times do |i|
       plot_mem = YAML.load(result)
 
       File.delete("bench.yml") if File.exists?("bench.yml")
-      run_ruby "ruby #{DISCOURSE_DIR}/script/bench.rb -o bench.yml"
+      run_ruby "cd #{DISCOURSE_DIR} && ruby script/bench.rb -o #{CURRENT_DIR}/bench.yml"
       if File.exists?("bench.yml")
         results << flatten_hash(YAML.load_file("bench.yml")).merge(plot_mem)
       end
+      break
     elsif !failed
       rebuild
       failed = true
