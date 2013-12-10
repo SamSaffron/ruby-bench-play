@@ -1,0 +1,3 @@
+#!/bin/bash
+export ORIGINAL_ENV=`export`
+ruby run_bench.rb
